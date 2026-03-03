@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão Greve x Boleto | Chefia ADMUFT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .bg-chefia { background-color: #0056b3; }
+        .text-chefia { color: #0056b3; }
+        .banner-header {
+            background: url('https://i.ibb.co/hR88YvM/image-8aff2b.jpg') no-repeat center center;
+            background-size: cover;
+            height: 220px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans">
+
+    <div class="banner-header w-full shadow-inner border-b-4 border-blue-800"></div>
+
+    <div class="container mx-auto px-4 py-6">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-black text-chefia uppercase tracking-tighter">Sistema de Rateio - Greve x Boleto</h1>
+            <p class="text-slate-500 font-medium">Atlética de Administração UFT - Palmas/TO</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                    <h2 class="font-bold text-slate-800 mb-4 flex items-center">💰 Configuração</h2>
+                    <label class="block text-xs font-bold text-slate-500 uppercase">Margem da Atlética (%)</label>
+                    <input type="number" id="lucroPercent" value="10" class="w-full mt-1 p-2 bg-slate-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold">
+                </div>
+
+                <div class="bg-chefia p-5 rounded-xl shadow-lg text-white">
+                    <h2 class="font-bold mb-2 uppercase text-xs opacity-80">Resumo do Caixa</h2>
+                    <div class="text-2xl font-black" id="totalArrecadado">R$ 0,00</div>
+                    <p class="text-xs mt-2 italic">Lucro Líquido: <span id="lucroReal" class="font-bold">R$ 0,00</span></p>
+                </div>
+                
+                <button onclick="importarListasIniciais()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-lg hover:bg-black transition text-sm">
+                    CARREGAR LISTAS ATUAIS
+                </button>
+            </div>
+
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-100 text-slate-600">
+                            <tr>
+                                <th class="p-4 text-xs font-bold uppercase">Atleta</th>
+                                <th class="p-4 text-xs font-bold uppercase">Modalidades</th>
+                                <th class="p-4 text-xs font-bold uppercase text-right">Total a Pagar</th>
+                                <th class="p-4 text-xs font-bold uppercase text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaCorpo" class="divide-y divide-slate-100 text-sm">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let listaAtletas = [];
+
+        // Dados base conforme suas listas enviadas
+        const baseFutsal = ["Manguary", "Arthur", "Yohan", "João Vitor", "felipe", "vitor t", "Lucas", "Antaniel (Goleiro)", "gabriel gomes", "Victor Hugo"];
+        const baseVoleiQuadra = ["José Gabriel", "Davi", "Bruno", "Washington", "João Pedro", "Yohan", "Manguary"];
+        const baseVoleiAreia = ["Davi", "José Gabriel"];
+
+        function adicionarOuAtualizar(nome, modalidade, custoBase) {
+            const margem = parseFloat(document.getElementById('lucroPercent').value) / 100;
+            const custoComMargem = custoBase * (1 + margem);
+            
+            const existente = listaAtletas.find(a => a.nome.toLowerCase() === nome.toLowerCase());
+
+            if (existente) {
+                if (!existente.mods.includes(modalidade)) {
+                    existente.mods.push(modalidade);
+                    existente.custoBase += custoBase;
+                    existente.total += custoComMargem;
+                }
+            } else {
+                listaAtletas.push({
+                    nome: nome,
+                    mods: [modalidade],
+                    custoBase: custoBase,
+                    total: custoComMargem
+                });
+            }
+        }
+
+        function importarListasIniciais() {
+            listaAtletas = []; // Limpa para evitar duplicados no clique
+            
+            // Futsal Masc: R$ 800 / 10 atletas enviados
+            baseFutsal.forEach(n => adicionarOuAtualizar(n, "Futsal Masc", 80.00));
+            
+            // Vôlei Quadra: R$ 800 / 7 atletas enviados
+            baseVoleiQuadra.forEach(n => adicionarOuAtualizar(n, "Vôlei Masc", 114.28));
+            
+            // Vôlei Areia: R$ 160 / 2 atletas
+            baseVoleiAreia.forEach(n => adicionarOuAtualizar(n, "Vôlei Areia", 80.00));
+
+            renderizar();
+        }
+
+        function renderizar() {
+            const corpo = document.getElementById('tabelaCorpo');
+            corpo.innerHTML = '';
+            let totalGeral = 0;
+            let totalCusto = 0;
+
+            listaAtletas.sort((a, b) => a.nome.localeCompare(b.nome)).forEach((a, i) => {
+                totalGeral += a.total;
+                totalCusto += a.custoBase;
+                
+                corpo.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-4 font-bold text-slate-700">${a.nome}</td>
+                        <td class="p-4"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">${a.mods.join(' + ')}</span></td>
+                        <td class="p-4 text-right font-black text-chefia text-base">R$ ${a.total.toFixed(2)}</td>
+                        <td class="p-4 text-center">
+                            <button onclick="copiarCobranca(${i})" class="text-xs bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">WhatsApp</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('totalArrecadado').innerText = `R$ ${totalGeral.toFixed(2)}`;
+            document.getElementById('lucroReal').innerText = `R$ ${(totalGeral - totalCusto).toFixed(2)}`;
+        }
+
+        function copiarCobranca(index) {
+            const a = listaAtletas[index];
+            const msg = `Olá ${a.nome}! 👋\n\nReferente ao campeonato *Greve x Boleto*:\n📍 Modalidades: ${a.mods.join(' e ')}\n💰 Valor Total: *R$ ${a.total.toFixed(2)}*\n\nFavor realizar o pagamento via PIX da Atlética. 🦈`;
+            
+            navigator.clipboard.writeText(msg).then(() => {
+                alert("Mensagem de cobrança copiada para o clipboard!");
+            });
+        }
+    </script>
+</body>
+</html>
