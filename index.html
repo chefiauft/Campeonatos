@@ -10,18 +10,19 @@
         .bg-chefia { background-color: var(--azul-chefia); }
         .text-chefia { color: var(--azul-chefia); }
         .banner-img { width: 100%; max-height: 300px; object-fit: cover; }
+        .capitalize-name { text-transform: capitalize; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans">
 
-    <div class="w-full shadow-lg bg-blue-500 overflow-hidden">
-        <img src="banner.jpg" alt="Chefia ADMUFT" class="banner-img">
+    <div class="w-full shadow-lg bg-blue-500 overflow-hidden text-center">
+        <img src="banner.jpg" alt="Chefia ADMUFT" class="banner-img inline-block">
     </div>
 
     <div class="container mx-auto px-4 py-6">
         <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
             <div>
-                <h1 class="text-3xl font-black text-chefia uppercase italic">Rateio Greve x Boleto</h1>
+                <h1 class="text-3xl font-black text-chefia uppercase italic tracking-tighter">Rateio Greve x Boleto</h1>
                 <p class="text-slate-500 font-bold text-xs uppercase tracking-widest">Administração UFT - Palmas/TO</p>
             </div>
             
@@ -32,6 +33,7 @@
                     <option value="Futsal">Futsal Masculino</option>
                     <option value="Vôlei Quadra">Vôlei de Quadra</option>
                     <option value="Vôlei Areia">Vôlei de Areia</option>
+                    <option value="Tênis de Mesa">Tênis de Mesa</option>
                 </select>
             </div>
         </header>
@@ -42,12 +44,16 @@
                 <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Lucro da Atlética (%)</label>
                     <input type="number" id="lucroPercent" value="10" oninput="processarDados()" class="w-full p-3 bg-slate-50 rounded-xl border-2 border-slate-100 font-black text-chefia outline-none focus:border-blue-500 transition-all">
-                    <button onclick="processarDados()" class="w-full mt-4 bg-chefia text-white font-black py-4 rounded-xl uppercase text-[10px] tracking-widest hover:opacity-90 shadow-lg shadow-blue-100">Atualizar Valores</button>
                 </div>
 
-                <div class="bg-chefia p-6 rounded-3xl text-white shadow-xl">
-                    <p class="text-[10px] font-bold uppercase opacity-60">Total em Caixa</p>
+                <div class="bg-chefia p-6 rounded-3xl text-white shadow-xl relative overflow-hidden">
+                    <p class="text-[10px] font-bold uppercase opacity-60 tracking-widest">Total em Caixa</p>
                     <div class="text-3xl font-black" id="totalGeral">R$ 0,00</div>
+                    
+                    <div class="mt-2 text-[11px] font-bold text-blue-200 uppercase">
+                        Ticket Médio/Atleta: <span id="ticketMedio" class="text-white">R$ 0,00</span>
+                    </div>
+
                     <div class="mt-4 pt-4 border-t border-white/10 flex justify-between items-center text-[10px] font-bold">
                         <span>LUCRO LÍQUIDO:</span>
                         <span id="lucroLiquido" class="bg-white text-chefia px-2 py-1 rounded">R$ 0,00</span>
@@ -56,7 +62,7 @@
             </div>
 
             <div class="lg:col-span-3 bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-left border-collapse text-sm">
                     <thead class="bg-slate-50 border-b border-slate-100">
                         <tr>
                             <th class="p-5 text-[10px] font-black text-slate-400 uppercase">Atleta</th>
@@ -65,7 +71,7 @@
                             <th class="p-5 text-[10px] font-black text-slate-400 uppercase text-center">Cobrança</th>
                         </tr>
                     </thead>
-                    <tbody id="tabelaCorpo" class="divide-y divide-slate-50"></tbody>
+                    <tbody id="tabelaCorpo" class="divide-y divide-slate-50 font-medium"></tbody>
                 </table>
             </div>
         </div>
@@ -74,11 +80,12 @@
     <script>
         let dadosAtletas = new Map();
 
-        // Bancos de dados das listas (vêm das suas capturas de tela)
+        // Bancos de dados atualizados
         const LISTAS = {
-            "Futsal": { nomes: ["Manguary", "Arthur", "Yohan", "João Vitor", "felipe", "vitor t", "Lucas", "Antaniel (Goleiro)", "gabriel gomes", "Victor Hugo"], custo: 80.00 },
-            "Vôlei Quadra": { nomes: ["José Gabriel", "Davi", "Bruno", "Washington", "João Pedro", "Yohan", "Manguary"], custo: 114.28 },
-            "Vôlei Areia": { nomes: ["Davi", "José Gabriel"], custo: 80.00 }
+            "Futsal": { nomes: ["manguary", "arthur", "yohan", "joão vitor", "felipe", "vitor t", "lucas", "antaniel (goleiro)", "gabriel gomes", "victor hugo"], custo: 80.00 },
+            "Vôlei Quadra": { nomes: ["josé gabriel", "davi", "bruno", "washington", "joão pedro", "yohan", "manguary"], custo: 114.28 },
+            "Vôlei Areia": { nomes: ["davi", "josé gabriel"], custo: 80.00 },
+            "Tênis de Mesa": { nomes: ["harife"], custo: 80.00 }
         };
 
         function processarDados() {
@@ -87,10 +94,13 @@
 
             for (const [modalidade, info] of Object.entries(LISTAS)) {
                 info.nomes.forEach(nome => {
-                    if (!dadosAtletas.has(nome)) {
-                        dadosAtletas.set(nome, { mods: [], custoBase: 0, valorFinal: 0 });
+                    // Normalização para Capitalização
+                    const nomeFormatado = nome.toLowerCase().split(' ').map(s => s.charAt(0).toUpperCase() + s.substring(1)).join(' ');
+                    
+                    if (!dadosAtletas.has(nomeFormatado)) {
+                        dadosAtletas.set(nomeFormatado, { mods: [], custoBase: 0, valorFinal: 0 });
                     }
-                    let data = dadosAtletas.get(nome);
+                    let data = dadosAtletas.get(nomeFormatado);
                     data.mods.push(modalidade);
                     data.custoBase += info.custo;
                     data.valorFinal += info.custo * margem;
@@ -105,25 +115,26 @@
             corpo.innerHTML = '';
             let totalArrecadado = 0;
             let totalCustoBase = 0;
+            let totalAtletasFiltro = 0;
 
             Array.from(dadosAtletas.entries()).sort().forEach(([nome, info]) => {
-                // Lógica de Filtro
                 if (filtro !== "TODOS" && !info.mods.includes(filtro)) return;
 
                 totalArrecadado += info.valorFinal;
                 totalCustoBase += info.custoBase;
+                totalAtletasFiltro++;
 
                 corpo.innerHTML += `
                     <tr class="hover:bg-slate-50 transition-all">
-                        <td class="p-5 font-black text-slate-700">${nome}</td>
+                        <td class="p-5 font-black text-slate-700 capitalize-name">${nome}</td>
                         <td class="p-5 text-center">
                             <div class="flex flex-wrap gap-1 justify-center">
-                                ${info.mods.map(m => `<span class="bg-blue-100 text-blue-700 text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter">${m}</span>`).join('')}
+                                ${info.mods.map(m => `<span class="bg-blue-50 text-blue-700 text-[8px] px-2 py-0.5 rounded-full font-black uppercase border border-blue-100">${m}</span>`).join('')}
                             </div>
                         </td>
                         <td class="p-5 text-right font-black text-chefia text-lg">R$ ${info.valorFinal.toFixed(2)}</td>
                         <td class="p-5 text-center">
-                            <button onclick="copiarZap('${nome}', ${info.valorFinal})" class="bg-emerald-500 text-white p-2 rounded-lg hover:scale-110 transition-transform">
+                            <button onclick="copiarZap('${nome}', ${info.valorFinal})" class="bg-emerald-500 text-white p-2 rounded-xl hover:scale-110 active:scale-95 transition-all shadow-md">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                                 </svg>
@@ -133,17 +144,18 @@
                 `;
             });
 
+            const ticket = totalAtletasFiltro > 0 ? (totalArrecadado / totalAtletasFiltro) : 0;
             document.getElementById('totalGeral').innerText = `R$ ${totalArrecadado.toFixed(2)}`;
+            document.getElementById('ticketMedio').innerText = `R$ ${ticket.toFixed(2)}`;
             document.getElementById('lucroLiquido').innerText = `R$ ${(totalArrecadado - totalCustoBase).toFixed(2)}`;
         }
 
         function copiarZap(nome, valor) {
-            const msg = `Salve, ${nome}! 🦈\n\nRateio da *Chefia ADMUFT* pro Greve x Boleto:\n💰 Valor: *R$ ${valor.toFixed(2)}*\n\nMande o comprovante pra confirmar!`;
+            const msg = `Salve, ${nome}! 🦈\n\nRateio *Chefia ADMUFT* - Greve x Boleto:\n💰 Valor: *R$ ${valor.toFixed(2)}*\n\nMande o comprovante pro PIX da Atlética!`;
             navigator.clipboard.writeText(msg);
-            alert("Texto copiado para o WhatsApp!");
+            alert("Mensagem copiada para o " + nome + "!");
         }
 
-        // Início automático
         processarDados();
     </script>
 </body>
