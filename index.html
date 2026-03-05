@@ -12,9 +12,9 @@
         .banner-img { width: 100%; max-height: 300px; object-fit: cover; }
     </style>
 </head>
-<body class="bg-slate-100 font-sans">
+<body class="bg-slate-100 font-sans text-slate-900">
 
-    <div class="w-full shadow-lg bg-blue-500 overflow-hidden text-center">
+    <div class="w-full shadow-lg bg-blue-500 overflow-hidden text-center border-b-4 border-blue-900">
         <img src="banner.jpg" alt="Chefia ADMUFT" class="banner-img inline-block">
     </div>
 
@@ -26,13 +26,17 @@
             </div>
             
             <div class="bg-white p-3 rounded-2xl shadow-sm flex items-center gap-3 border border-slate-200">
-                <span class="text-[10px] font-black uppercase text-slate-400">Filtrar:</span>
+                <span class="text-[10px] font-black uppercase text-slate-400">Filtrar Modalidade:</span>
                 <select id="filtroModalidade" onchange="renderizar()" class="bg-slate-50 border-none text-sm font-bold text-chefia focus:ring-0 outline-none cursor-pointer">
                     <option value="TODOS">Todas as Modalidades</option>
                     <option value="Futsal">Futsal Masculino</option>
-                    <option value="Vôlei Quadra">Vôlei de Quadra</option>
-                    <option value="Vôlei Areia">Vôlei de Areia</option>
+                    <option value="Vôlei">Vôlei de Quadra</option>
                     <option value="Tênis de Mesa">Tênis de Mesa</option>
+                    <option value="FIFA Fem">FIFA Feminino</option>
+                    <option value="Xadrez">Xadrez</option>
+                    <option value="LoL">LoL (E-sports)</option>
+                    <option value="Poker">Poker</option>
+                    <option value="Truco">Truco</option>
                 </select>
             </div>
         </header>
@@ -54,12 +58,12 @@
                             <p class="text-[9px] opacity-60 uppercase font-bold">Média p/ Atleta (Geral)</p>
                             <p class="text-lg font-black" id="ticketMedio">R$ 0,00</p>
                         </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div class="bg-blue-900/40 p-2 rounded-xl">
+                        <div class="grid grid-cols-2 gap-2 text-center">
+                            <div class="bg-blue-900/40 p-2 rounded-xl border border-white/10">
                                 <p class="text-[8px] opacity-70 uppercase font-bold italic">1 Modalidade</p>
                                 <p class="text-sm font-black" id="ticket1Mod">R$ 0,00</p>
                             </div>
-                            <div class="bg-blue-900/40 p-2 rounded-xl">
+                            <div class="bg-blue-900/40 p-2 rounded-xl border border-white/10">
                                 <p class="text-[8px] opacity-70 uppercase font-bold italic">2 Modalidades</p>
                                 <p class="text-sm font-black" id="ticket2Mod">R$ 0,00</p>
                             </div>
@@ -68,7 +72,7 @@
 
                     <div class="mt-4 pt-4 border-t border-white/20 flex justify-between items-center text-[10px] font-bold">
                         <span>LUCRO LÍQUIDO:</span>
-                        <span id="lucroLiquido" class="bg-white text-chefia px-2 py-1 rounded">R$ 0,00</span>
+                        <span id="lucroLiquido" class="bg-white text-chefia px-2 py-1 rounded shadow-inner">R$ 0,00</span>
                     </div>
                 </div>
             </div>
@@ -78,9 +82,9 @@
                     <thead class="bg-slate-50 border-b border-slate-100">
                         <tr>
                             <th class="p-5 text-[10px] font-black text-slate-400 uppercase">Atleta</th>
-                            <th class="p-5 text-[10px] font-black text-slate-400 uppercase text-center">Qtd / Modalidades</th>
+                            <th class="p-5 text-[10px] font-black text-slate-400 uppercase text-center">Inscrições</th>
                             <th class="p-5 text-[10px] font-black text-slate-400 uppercase text-right">Total a Pagar</th>
-                            <th class="p-5 text-[10px] font-black text-slate-400 uppercase text-center">Ação</th>
+                            <th class="p-5 text-[10px] font-black text-slate-400 uppercase text-center">WhatsApp</th>
                         </tr>
                     </thead>
                     <tbody id="tabelaCorpo" class="divide-y divide-slate-50 font-medium text-slate-700"></tbody>
@@ -92,11 +96,16 @@
     <script>
         let dadosAtletas = new Map();
 
+        // Bancos de dados atualizados com base no rateio total (custo / atletas inscritos)
         const LISTAS = {
-            "Futsal": { nomes: ["manguary", "arthur", "yohan", "joão vitor", "felipe", "vitor t", "lucas", "antaniel (goleiro)", "gabriel gomes", "victor hugo"], custo: 80.00 },
-            "Vôlei Quadra": { nomes: ["josé gabriel", "davi", "bruno", "washington", "joão pedro", "yohan", "manguary"], custo: 114.28 },
-            "Vôlei Areia": { nomes: ["davi", "josé gabriel"], custo: 80.00 },
-            "Tênis de Mesa": { nomes: ["harife"], custo: 80.00 }
+            "Futsal": { nomes: ["manguary", "arthur", "yohan", "joão vitor", "felipe", "vitor t", "lucas", "antaniel (goleiro)", "gabriel gomes", "victor hugo", "jonadabe", "walysson"], custo: 66.67 }, // R$ 800 / 12
+            "Vôlei": { nomes: ["josé gabriel", "davi", "bruno", "washington", "joão pedro", "yohan", "manguary", "daniel aquiles", "judson", "trevisan", "kayque", "icaro"], custo: 66.67 }, // R$ 800 / 12
+            "Tênis de Mesa": { nomes: ["harife"], custo: 80.00 },
+            "FIFA Fem": { nomes: ["bianca"], custo: 80.00 },
+            "Xadrez": { nomes: ["izaias"], custo: 80.00 },
+            "LoL": { nomes: ["eliã", "andreu", "joão lucas"], custo: 160.00 }, // R$ 480 / 3 (vaga 'x' omitida)
+            "Poker": { nomes: ["matheus"], custo: 80.00 },
+            "Truco": { nomes: ["ana paula", "vitor hugo"], custo: 80.00 } // R$ 160 / 2
         };
 
         function processarDados() {
@@ -105,7 +114,9 @@
 
             for (const [modalidade, info] of Object.entries(LISTAS)) {
                 info.nomes.forEach(nome => {
+                    // Formatação Capitalize
                     const nomeFormatado = nome.toLowerCase().split(' ').map(s => s.charAt(0).toUpperCase() + s.substring(1)).join(' ');
+                    
                     if (!dadosAtletas.has(nomeFormatado)) {
                         dadosAtletas.set(nomeFormatado, { mods: [], custoBase: 0, valorFinal: 0 });
                     }
@@ -129,10 +140,13 @@
             let soma2Mod = 0, qtd2Mod = 0;
             let atletasFiltrados = 0;
 
-            Array.from(dadosAtletas.entries()).sort().forEach(([nome, info]) => {
+            // Ordenação Alfabética
+            const atletasSorted = Array.from(dadosAtletas.entries()).sort();
+
+            atletasSorted.forEach(([nome, info]) => {
                 const nMods = info.mods.length;
                 
-                // Acumular para métricas globais (independente de filtro de tela)
+                // Métrica Ticket Médio (Global)
                 if (nMods === 1) { soma1Mod += info.valorFinal; qtd1Mod++; }
                 if (nMods === 2) { soma2Mod += info.valorFinal; qtd2Mod++; }
 
@@ -143,21 +157,21 @@
                 atletasFiltrados++;
 
                 corpo.innerHTML += `
-                    <tr class="hover:bg-blue-50/50 transition-all">
+                    <tr class="hover:bg-blue-50/50 transition-all group">
                         <td class="p-5 font-black text-slate-800">${nome}</td>
                         <td class="p-5 text-center">
                             <div class="flex flex-col items-center gap-1">
-                                <span class="text-[9px] font-bold text-slate-400 uppercase">${nMods} modalidade(s)</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">${nMods} participação(ões)</span>
                                 <div class="flex flex-wrap gap-1 justify-center">
-                                    ${info.mods.map(m => `<span class="bg-blue-100 text-blue-700 text-[8px] px-2 py-0.5 rounded-full font-black uppercase">${m}</span>`).join('')}
+                                    ${info.mods.map(m => `<span class="bg-blue-100 text-blue-700 text-[8px] px-2 py-0.5 rounded-full font-black uppercase border border-blue-200">${m}</span>`).join('')}
                                 </div>
                             </div>
                         </td>
                         <td class="p-5 text-right font-black text-chefia text-lg">R$ ${info.valorFinal.toFixed(2)}</td>
                         <td class="p-5 text-center">
-                            <button onclick="copiarZap('${nome}', ${info.valorFinal}, ${nMods})" class="bg-emerald-500 text-white p-2 rounded-xl hover:scale-110 active:scale-95 transition-all shadow-md">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor font-bold">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <button onclick="copiarZap('${nome}', ${info.valorFinal}, ${nMods})" class="bg-emerald-500 text-white p-2.5 rounded-xl hover:scale-110 active:scale-95 transition-all shadow-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </button>
                         </td>
@@ -165,7 +179,6 @@
                 `;
             });
 
-            // Atualizar Dashboard Lateral
             document.getElementById('totalGeral').innerText = `R$ ${totalArrecadado.toFixed(2)}`;
             document.getElementById('ticketMedio').innerText = `R$ ${atletasFiltrados > 0 ? (totalArrecadado / atletasFiltrados).toFixed(2) : '0,00'}`;
             document.getElementById('ticket1Mod').innerText = `R$ ${qtd1Mod > 0 ? (soma1Mod / qtd1Mod).toFixed(2) : '0,00'}`;
@@ -174,9 +187,9 @@
         }
 
         function copiarZap(nome, valor, n) {
-            const msg = `Salve, ${nome}! 🦈\n\nRateio *Chefia ADMUFT* (Greve x Boleto):\nParticipando de: *${n} modalidade(s)*\nTotal: *R$ ${valor.toFixed(2)}*\n\nMande o comprovante pro PIX da Atlética para confirmar sua inscrição!`;
+            const msg = `Salve, ${nome}! 🦈\n\nRateio *Chefia ADMUFT* - Greve x Boleto:\n📍 Inscrito em: *${n} modalidade(s)*\n💰 Valor Total: *R$ ${valor.toFixed(2)}*\n\nMande o comprovante pro PIX da Atlética para confirmar!`;
             navigator.clipboard.writeText(msg);
-            alert("Copiado! Mensagem pronta para o WhatsApp de " + nome);
+            alert("Texto de cobrança copiado para " + nome + "!");
         }
 
         processarDados();
