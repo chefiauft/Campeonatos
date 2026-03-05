@@ -22,7 +22,7 @@
         <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 text-center md:text-left">
             <div>
                 <h1 class="text-3xl font-black text-chefia uppercase italic tracking-tighter">Rateio Greve x Boleto</h1>
-                <p class="text-slate-500 font-bold text-xs uppercase tracking-widest text-center md:text-left">Administração UFT - Palmas/TO</p>
+                <p class="text-slate-500 font-bold text-xs uppercase tracking-widest">Administração UFT - Palmas/TO</p>
             </div>
             
             <div class="bg-white p-3 rounded-2xl shadow-sm flex items-center gap-3 border border-slate-200">
@@ -96,7 +96,7 @@
     <script>
         let dadosAtletas = new Map();
 
-        // Dados das listas e custos base rateados
+        // Dados das listas e custos base rateados conforme definições da Atlética
         const LISTAS = {
             "Futsal": { nomes: ["manguary", "arthur", "yohan", "joão vitor", "felipe", "vitor t", "lucas", "antaniel (goleiro)", "gabriel gomes", "victor hugo", "jonadabe", "walysson"], custo: 66.67 },
             "Vôlei": { nomes: ["josé gabriel", "davi", "bruno", "washington", "joão pedro", "yohan", "manguary", "daniel aquiles", "judson", "trevisan", "kayque", "icaro"], custo: 66.67 },
@@ -114,6 +114,7 @@
 
             for (const [modalidade, info] of Object.entries(LISTAS)) {
                 info.nomes.forEach(nome => {
+                    // Formatação automática para Capitalize (Primeira Letra Maiúscula)
                     const nomeFormatado = nome.toLowerCase().split(' ').map(s => s.charAt(0).toUpperCase() + s.substring(1)).join(' ');
                     if (!dadosAtletas.has(nomeFormatado)) {
                         dadosAtletas.set(nomeFormatado, { mods: [], custoBase: 0, valorFinal: 0 });
